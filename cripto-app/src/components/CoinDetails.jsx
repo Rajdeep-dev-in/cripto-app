@@ -4,6 +4,7 @@ import { server } from '../main'
 import { useParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, Hash } from 'lucide-react'
 import Chart from './Chart.jsx'
+import {Bars} from "react-loader-spinner";
 
 function CoinDetails(){
 
@@ -13,16 +14,26 @@ function CoinDetails(){
     const [chartData, setChartData] = useState([])
     const [currency , setCurrency] = useState("inr")
     const [days, setDays] = useState("24h")
-
+    const [isLoading , setLoading] = useState(false)
     const daysArr = ["24h", "7d" , "14d", "30d", "60d", "200d", "1y", "max"]
     const coinSymbol = currency === 'inr' ? '₹' : currency === 'eur' ? '€' : '$'
     useEffect(() => {
         async function fetchCoin(){
-            const {data} = await axios.get(`${server}/coins/${params.id}`)
-            const {data: chatValue} = await axios.get(`${server}/coins/${params.id}/market_chart?vs_currency=${currency}&days=${days}`)
-            setChartData(chatValue.prices)
-            console.log(chatValue, 'chart data');
-            setCoinDetails(data)     
+            try {
+                setLoading(true)
+                const {data} = await axios.get(`${server}/coins/${params.id}`)
+                const {data: chatValue} = await axios.get(`${server}/coins/${params.id}/market_chart?vs_currency=${currency}&days=${days}`)
+                setChartData(chatValue.prices)
+                console.log(chatValue, 'chart data');
+                setCoinDetails(data) 
+                
+            } catch (error) {
+                setLoading(false)
+                console.log(error);
+                
+            } finally{
+                setLoading(false)
+            }   
         } 
         fetchCoin()
     }, [params.id, days, currency])
@@ -57,13 +68,13 @@ function CoinDetails(){
     }
     return(
         <>
-            <div className=" w-full min-w-48 px-5 lg:px-20 py-4">
+            <div className=" w-full min-w-48 px-5 lg:px-10 py-4">
                 <div className=' w-full '>
                     <Chart 
                         chartArr={chartData}
                         currencySymbol={coinSymbol}
                         days={days}
-                    />
+                    />    
                 </div>
                 <div className=' flex justify-center items-center flex-wrap gap-2'>
                     {daysArr.map((val) => (
@@ -111,7 +122,14 @@ function CoinDetails(){
                 <div className='flex justify-center items-center'>
                     <p>Last Updated On {Date(coinDetails.last_updated).split("G")[0]}</p>
                 </div>
-                <div className=' flex flex-col justify-start items-start gap-y-4'>
+                {
+                    isLoading ? 
+                    <div className='w-screen h-screen flex justify-center items-center'>
+                        <Bars width="100" height="100" color="#202020" />
+                    </div>
+                    :   
+                    <div>
+                        <div className=' flex flex-col justify-start items-start gap-y-4'>
                     <img 
                         src={coinDetails?.image?.large} 
                         alt='Bitcoin_Image' 
@@ -150,6 +168,9 @@ function CoinDetails(){
                             <span className='font-bold'>All Time High</span><span>{coinSymbol}{coinDetails?.market_data?.ath[`${currency}`]}</span>
                         </p>
                 </div>
+                    </div>
+                }
+                
                 
             </div>
         </>
