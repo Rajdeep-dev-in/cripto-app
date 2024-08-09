@@ -124,7 +124,7 @@ function CoinDetails(){
                 </div>
                 {
                     isLoading ? 
-                    <div className='w-screen h-screen flex justify-center items-center'>
+                    <div className=' h-screen flex justify-center items-center'>
                         <Bars width="100" height="100" color="#202020" />
                     </div>
                     :   
